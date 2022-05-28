@@ -1,39 +1,25 @@
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import Modal from "./components/Modal";
 
-const todoItems = [
-  {
-    id: 1,
-    title: "Go to Market",
-    description: "Buy ingredients to prepare dinner",
-    completed: true,
-  },
-  {
-    id: 2,
-    title: "Study",
-    description: "Read Algebra and History textbook for the upcoming test",
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Sammy's books",
-    description: "Go to library to return Sammy's books",
-    completed: true,
-  },
-  {
-    id: 4,
-    title: "Article",
-    description: "Write article on how to use Django with React",
-    completed: false,
-  },
-];
 
 const App = () => {
 
-  const [todoList, setTodoList] = useState(todoItems);
+  const [todoList, setTodoList] = useState([]);
   const [viewCompleted, setViewCompleted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [activeItem, setActiveItem] = useState({});
+
+  useEffect(() => {
+    refreshList();
+  }, [])
+
+  const refreshList = () =>{
+    axios
+          .get("http://localhost:8000/api/todos/")
+          .then((response) => {setTodoList(response.data); console.log(response)})
+          .catch((error) => console.log(error));
+  }
 
   const displayCompleted = (status) => {
     if (status){
@@ -48,11 +34,21 @@ const App = () => {
 
   const handleSubmit = (item) => {
     toggle();
-    console.log("saved" + JSON.stringify(item));
+    if (item.id){
+      axios
+           .put(`http://localhost:8000/api/todos/${item.id}/`, item)
+           .then((response) => refreshList());
+      return;
+    }
+    axios
+         .post("http://localhost:8000/api/todos/", item)
+         .then((response) => refreshList());
   }
 
   const handleDelete = (item) => {
-    console.log("deleted" + JSON.stringify(item));
+    axios
+         .delete(`http://localhost:8000/api/todos/${item.id}/`)
+         .then((response) => refreshList());
   }
 
   const createItem = () => {
